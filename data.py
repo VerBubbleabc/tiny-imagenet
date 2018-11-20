@@ -55,14 +55,18 @@ class Tiny_imagenet_dataset(Dataset):
         img = Image.open(self.image_paths[index])
         if img.mode == 'L':
             img = img.convert('RGB')
+            
+        labels = np.argmax(self.labels[index])
         if self.use_box:
             if self.box_norm:
                 box = self.boxes[index] / 64
             else:
                 box = self.boxes[index]
-            return self.transform(img), self.labels[index], box
+            return self.transform(img), labels, box
         else:
-            return self.transform(img), self.labels[index]
+            return self.transform(img), labels
         
     def __len__(self):
         return len(self.image_paths)
+    
+    
