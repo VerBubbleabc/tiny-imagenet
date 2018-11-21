@@ -12,7 +12,8 @@ import numpy as np
 from PIL import Image
 
 class Tiny_imagenet_dataset(Dataset):
-    def __init__(self, root='data/train', use_box=False, box_norm=True):
+    def __init__(self, root='data/train', use_box=False, box_norm=True, 
+                 transform=None, test_mode=False):
         '''
             example: 
                 root='data/train'
@@ -37,19 +38,29 @@ class Tiny_imagenet_dataset(Dataset):
             labels = [i.split('_')[0].split('/')[-1] for i in file_paths]
             boxes = [(int(i[0]), int(i[1]), int(i[2]), int(i[3])) for i in [j.split('\t')[1:] for j in l_loc]]
             
-            self.image_paths.extend(file_paths)
-            self.labels.extend(labels)
-            self.boxes.extend(boxes)
+            
+            if not test_mode:
+                self.image_paths.extend(file_paths)
+                self.labels.extend(labels)
+                self.boxes.extend(boxes)
+            else:
+                self.image_paths.extend([file_paths[0]])
+                self.labels.extend([labels[0]])
+                self.boxes.extend([boxes[0]])
         
         self.image_paths = np.array(self.image_paths)
         self.labels = np.array(self.labels).reshape((len(self.labels), 1))
         self.labels = self.ohe.transform(self.labels)
         self.boxes = np.array(self.boxes)
-            
-            
-        self.transform = transforms.Compose([
-            transforms.ToTensor(),
-        ])
+                    
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+
+        if transform == None:
+            self.transform = transforms.Compose([
+                transforms.ToTensor(),
+                normalize,
+            ])
             
     def __getitem__(self, index):
         img = Image.open(self.image_paths[index])
